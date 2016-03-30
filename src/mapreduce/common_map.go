@@ -40,6 +40,11 @@ func doMap(
 	//     err := enc.Encode(&kv)
 	//
 	// Remember to close the file after you have written all the values!
+	for i := 0; i < nReduce; i++ {
+		filename := reduceName(jobName, mapTaskNumber, i)
+	}
+
+
 }
 
 func ihash(s string) uint32 {
