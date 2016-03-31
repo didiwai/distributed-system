@@ -3,7 +3,7 @@ package mapreduce
 import (
 	"fmt"
 	"testing"
-	"time"
+	//"time"
 
 	"bufio"
 	"log"
@@ -24,7 +24,7 @@ const (
 
 // Split in words
 func MapFunc(file string, value string) (res []KeyValue) {
-	debug("Map %v\n", value)
+	//debug("Map %v\n", value)
 	words := strings.Fields(value)
 	for _, w := range words {
 		kv := KeyValue{w, ""}
@@ -35,9 +35,11 @@ func MapFunc(file string, value string) (res []KeyValue) {
 
 // Just return key
 func ReduceFunc(key string, values []string) string {
-	for _, e := range values {
+	/*
+	for _, e := range values {  // 此处value全部为空字符串
 		debug("Reduce %s %v\n", key, e)
 	}
+	*/
 	return ""
 }
 
@@ -95,7 +97,7 @@ func checkWorker(t *testing.T, l []int) {
 	}
 }
 
-// Make input file
+// 创建num个输入文件, 并写入数字
 func makeInputs(num int) []string {
 	var names []string
 	var i = 0
@@ -113,7 +115,7 @@ func makeInputs(num int) []string {
 		w.Flush()
 		file.Close()
 	}
-	return names
+	return names  // 返回文件名数组
 }
 
 // Cook up a unique-ish UNIX-domain socket name
@@ -130,13 +132,13 @@ func port(suffix string) string {
 }
 
 func setup() *Master {
-	files := makeInputs(nMap)
+	files := makeInputs(nMap)  // 创建一百个输入文件
 	master := port("master")
 	mr := Distributed("test", files, nReduce, master)
 	return mr
 }
 
-func cleanup(mr *Master) {
+func cleanup(mr *Master) {  // 清除所有测试文件
 	mr.CleanupFiles()
 	for _, f := range mr.files {
 		removeFile(f)
@@ -151,6 +153,8 @@ func TestSequentialSingle(t *testing.T) {
 	cleanup(mr)
 }
 
+
+
 func TestSequentialMany(t *testing.T) {
 	mr := Sequential("test", makeInputs(5), 3, MapFunc, ReduceFunc)
 	mr.Wait()
@@ -159,6 +163,8 @@ func TestSequentialMany(t *testing.T) {
 	cleanup(mr)
 }
 
+
+/*
 func TestBasic(t *testing.T) {
 	mr := setup()
 	for i := 0; i < 2; i++ {
@@ -170,6 +176,7 @@ func TestBasic(t *testing.T) {
 	checkWorker(t, mr.stats)
 	cleanup(mr)
 }
+
 
 func TestOneFailure(t *testing.T) {
 	mr := setup()
@@ -206,3 +213,4 @@ func TestManyFailures(t *testing.T) {
 		}
 	}
 }
+*/
