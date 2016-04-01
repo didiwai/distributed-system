@@ -5,8 +5,6 @@ import (
 	"os"
 	"log"
 	"encoding/json"
-
-	"fmt"
 )
 
 // doMap does the job of a map worker: it reads one of the input files
@@ -25,7 +23,7 @@ func doMap(
 		3. 生成nReduce个中间文件
 	 */
 	file, err := os.Open(inFile)
-	fmt.Printf("Read filename: %s, MapTaskNumber: %d, nReduce: %d, jobName: %s\n", inFile, mapTaskNumber, nReduce, jobName)
+	//fmt.Printf("Read filename: %s, MapTaskNumber: %d, nReduce: %d, jobName: %s\n", inFile, mapTaskNumber, nReduce, jobName)
 	if err != nil {
 		log.Fatal("Open file error: ", err)
 	}
@@ -42,11 +40,11 @@ func doMap(
 	}
 	res := mapF(inFile, string(buf)) // res []KeyValue 键值对数组
 	rSize := len(res)
-	fmt.Printf("the Map res size: %d\n", rSize)
+	//fmt.Printf("the Map res size: %d\n", rSize)
 	file.Close()
 	for i := 0; i < nReduce; i++ {  // 生成nReduce个中间文件
 		fileName := reduceName(jobName, mapTaskNumber, i)
-		fmt.Printf("Debug: Map filename: %s\n", fileName)
+		//fmt.Printf("Debug: Map filename: %s\n", fileName)
 		file, err := os.Create(fileName)  // 创建新中间文件
 		if err != nil {
 			log.Fatal("Create mid file: ", err)
