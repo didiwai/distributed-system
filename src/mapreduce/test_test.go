@@ -51,7 +51,6 @@ func check(t *testing.T, files []string) {
 		log.Fatal("check: ", err)
 	}
 	defer output.Close()
-
 	var lines []string
 	for _, f := range files {
 		input, err := os.Open(f)
@@ -132,9 +131,11 @@ func port(suffix string) string {
 }
 
 func setup() *Master {
+	debug("DEBUG: Master create...\n")
 	files := makeInputs(nMap)  // 创建一百个输入文件
 	master := port("master")
 	mr := Distributed("test", files, nReduce, master)
+	debug("DEBUG: Master end...\n")
 	return mr
 }
 
@@ -145,6 +146,7 @@ func cleanup(mr *Master) {  // 清除所有测试文件
 	}
 }
 
+/*
 func TestSequentialSingle(t *testing.T) {
 	mr := Sequential("test", makeInputs(1), 1, MapFunc, ReduceFunc)
 	mr.Wait()
@@ -152,9 +154,9 @@ func TestSequentialSingle(t *testing.T) {
 	checkWorker(t, mr.stats)
 	cleanup(mr)
 }
+*/
 
-
-
+/*
 func TestSequentialMany(t *testing.T) {
 	mr := Sequential("test", makeInputs(5), 3, MapFunc, ReduceFunc)
 	mr.Wait()
@@ -162,22 +164,33 @@ func TestSequentialMany(t *testing.T) {
 	checkWorker(t, mr.stats)
 	cleanup(mr)
 }
+*/
 
 
-/*
+
+// 启动一个Master服务器和多个Worker服务器
 func TestBasic(t *testing.T) {
+	debug("DEBUG: TestBasic begin..\n")
 	mr := setup()
 	for i := 0; i < 2; i++ {
-		go RunWorker(mr.address, port("worker"+strconv.Itoa(i)),
-			MapFunc, ReduceFunc, -1)
+		debug("DEBUG: Create %v worker..\n", i)
+		go RunWorker(
+			mr.address,
+			port("worker"+strconv.Itoa(i)),
+			MapFunc,
+			ReduceFunc,
+			-1)
 	}
 	mr.Wait()
 	check(t, mr.files)
+	fmt.Println("check files success!")
 	checkWorker(t, mr.stats)
 	cleanup(mr)
+	debug("DEBUG: TestBasic end..\n")
 }
 
 
+/*
 func TestOneFailure(t *testing.T) {
 	mr := setup()
 	// Start 2 workers that fail after 10 tasks

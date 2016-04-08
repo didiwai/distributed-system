@@ -26,7 +26,6 @@ type Worker struct {
 func (wk *Worker) DoTask(arg *DoTaskArgs, _ *struct{}) error {
 	fmt.Printf("%s: given %v task #%d on file %s (nios: %d)\n",
 		wk.name, arg.Phase, arg.TaskNumber, arg.File, arg.NumOtherPhase)
-
 	switch arg.Phase {
 	case mapPhase:
 		doMap(arg.JobName, arg.TaskNumber, arg.File, arg.NumOtherPhase, wk.Map)
@@ -54,6 +53,7 @@ func (wk *Worker) Shutdown(_ *struct{}, res *ShutdownReply) error {
 func (wk *Worker) register(master string) {
 	args := new(RegisterArgs)
 	args.Worker = wk.name
+	// 核心, 向master注册当前worker
 	ok := call(master, "Master.Register", args, new(struct{}))
 	if ok == false {
 		fmt.Printf("Register: RPC %s register error\n", master)
@@ -67,9 +67,9 @@ func RunWorker(MasterAddress string, me string,
 	ReduceFunc func(string, []string) string,
 	nRPC int,
 ) {
-	debug("RunWorker %s\n", me)
+	debug("DEBUG: RunWorker %s\n", me)
 	wk := new(Worker)
-	wk.name = me
+	wk.name = me  // 即为address
 	wk.Map = MapFunc
 	wk.Reduce = ReduceFunc
 	wk.nRPC = nRPC

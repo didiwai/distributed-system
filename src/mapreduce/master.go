@@ -41,6 +41,7 @@ func (mr *Master) Register(args *RegisterArgs, _ *struct{}) error {
 }
 
 // newMaster initializes a new Map/Reduce Master
+// 此处相当于Master的一个构造函数, 返回一个Master实例
 func newMaster(master string) (mr *Master) {
 	mr = new(Master)
 	mr.address = master

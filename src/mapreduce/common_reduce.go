@@ -29,10 +29,11 @@ func doReduce(
 		3. 调用reduce函数
 		4. 最后生成nReduce个结果文件
 	 */
+	debug("DEBUG: Reduce jobName: %v, reduceTaskNumber: %v, nMap: %s\n", jobName, reduceTaskNumber, nMap)
 	keyValues := make(map[string][]string)
 	for i := 0; i < nMap; i++ {
 		fileName := reduceName(jobName, i, reduceTaskNumber)
-		//fmt.Printf("Reduce fileName: %s\n", fileName)
+		debug("Reduce fileName: %s\n", fileName)
 		file, err := os.Open(fileName)
 		if err != nil {
 			log.Fatal("Open Error: ", fileName)
@@ -53,7 +54,6 @@ func doReduce(
 		}
 		file.Close()
 	}
-	//fmt.Println("hello world")
 
 	var keys []string
 	for k, _ := range keyValues {
@@ -61,14 +61,16 @@ func doReduce(
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)  // 递增排序
-	file, err := os.Create(mergeName(jobName, reduceTaskNumber))
+	mergeFileName := mergeName(jobName, reduceTaskNumber)
+	debug("DEBUG: mergeFileName: %v\n", mergeFileName)
+	file, err := os.Create(mergeFileName)
 	if err != nil {
 		log.Fatal("Create file error: ", err)
 	}
 	enc := json.NewEncoder(file)
 	for _, k := range keys {
 		res := reduceF(k, keyValues[k])
-		enc.Encode(KeyValue{k, res})
+		enc.Encode(&KeyValue{k, res})  // 注意此处要取地址
 	}
 	file.Close()
 }
