@@ -27,6 +27,7 @@ func (mr *Master) schedule(phase jobPhase) {  //表示job阶段, 值为 "Map" �
 		3. 若rpc调用执行失败, 则将任务重新塞入registerChannel执行
 
 		ps: 使用WaitGroup保证线程同步
+		若不加Wait等待所有goroutine结束在返回, 则会导致一些结果文件并未生成, 测试挂掉
 	 */
 
 	var wg sync.WaitGroup  //
