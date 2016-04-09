@@ -3,7 +3,7 @@ package mapreduce
 import (
 	"fmt"
 	"testing"
-	//"time"
+	"time"
 
 	"bufio"
 	"log"
@@ -146,7 +146,7 @@ func cleanup(mr *Master) {  // 清除所有测试文件
 	}
 }
 
-/*
+
 func TestSequentialSingle(t *testing.T) {
 	mr := Sequential("test", makeInputs(1), 1, MapFunc, ReduceFunc)
 	mr.Wait()
@@ -154,9 +154,9 @@ func TestSequentialSingle(t *testing.T) {
 	checkWorker(t, mr.stats)
 	cleanup(mr)
 }
-*/
 
-/*
+
+
 func TestSequentialMany(t *testing.T) {
 	mr := Sequential("test", makeInputs(5), 3, MapFunc, ReduceFunc)
 	mr.Wait()
@@ -164,7 +164,6 @@ func TestSequentialMany(t *testing.T) {
 	checkWorker(t, mr.stats)
 	cleanup(mr)
 }
-*/
 
 
 
@@ -190,7 +189,6 @@ func TestBasic(t *testing.T) {
 }
 
 
-/*
 func TestOneFailure(t *testing.T) {
 	mr := setup()
 	// Start 2 workers that fail after 10 tasks
@@ -203,6 +201,7 @@ func TestOneFailure(t *testing.T) {
 	checkWorker(t, mr.stats)
 	cleanup(mr)
 }
+
 
 func TestManyFailures(t *testing.T) {
 	mr := setup()
@@ -226,4 +225,3 @@ func TestManyFailures(t *testing.T) {
 		}
 	}
 }
-*/
