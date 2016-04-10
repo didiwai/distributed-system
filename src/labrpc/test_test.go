@@ -38,13 +38,13 @@ func TestBasic(t *testing.T) {
 
 	rn := MakeNetwork()
 
-	e := rn.MakeEnd("end1-99")
+	e := rn.MakeEnd("end1-99")  // 生成一个客户端对象
 
 	js := &JunkServer{}
-	svc := MakeService(js)
+	svc := MakeService(js)  // 创建一个RPC服务
 
 	rs := MakeServer()
-	rs.AddService(svc)
+	rs.AddService(svc)  // 注册服务
 	rn.AddServer("server99", rs)
 
 	rn.Connect("end1-99", "server99")
@@ -52,7 +52,7 @@ func TestBasic(t *testing.T) {
 
 	{
 		reply := ""
-		e.Call("JunkServer.Handler2", 111, &reply)
+		e.Call("JunkServer.Handler2", 111, &reply)  // 通过客户端调用rpc
 		if reply != "handler2-111" {
 			t.Fatalf("wrong reply from Handler2")
 		}

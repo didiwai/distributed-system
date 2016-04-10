@@ -76,6 +76,10 @@ type ClientEnd struct {
 // the return value indicates success; false means the
 // server couldn't be contacted.
 func (e *ClientEnd) Call(svcMeth string, args interface{}, reply interface{}) bool {
+	/*
+		构造reqMsg请求, 然后请求塞入ClientEnd的ch channel中等待处理
+		从replyCh中获取reply, 判断当前rpc调用是否执行成功
+	 */
 	req := reqMsg{}
 	req.endname = e.endname
 	req.svcMeth = svcMeth
@@ -103,7 +107,7 @@ func (e *ClientEnd) Call(svcMeth string, args interface{}, reply interface{}) bo
 }
 
 type Network struct {
-	mu             sync.Mutex
+	mu             sync.Mutex  // Mutex同步锁
 	reliable       bool
 	longDelays     bool                        // pause a long time on send on disabled connection
 	longReordering bool                        // sometimes delay replies a long time
@@ -115,6 +119,10 @@ type Network struct {
 }
 
 func MakeNetwork() *Network {
+	/*
+		初始化一个NetWork对象
+		并且使用单goroutine来处理从clientEnd发送到endCh的请求
+	 */
 	rn := &Network{}
 	rn.reliable = true
 	rn.ends = map[interface{}]*ClientEnd{}
@@ -181,6 +189,10 @@ func (rn *Network) IsServerDead(endname interface{}, servername interface{}, ser
 }
 
 func (rn *Network) ProcessReq(req reqMsg) {
+	/*
+		从Network中获取ClientEnd当前状态, 判断是否服务可用
+
+	 */
 	enabled, servername, server, reliable, longreordering := rn.ReadEndnameInfo(req.endname)
 
 	if enabled && servername != nil && server != nil {
@@ -264,6 +276,9 @@ func (rn *Network) ProcessReq(req reqMsg) {
 // create a client end-point.
 // start the thread that listens and delivers.
 func (rn *Network) MakeEnd(endname interface{}) *ClientEnd {
+	/*
+		创建一个ClientEnd对象
+	 */
 	rn.mu.Lock()
 	defer rn.mu.Unlock()
 
@@ -273,7 +288,7 @@ func (rn *Network) MakeEnd(endname interface{}) *ClientEnd {
 
 	e := &ClientEnd{}
 	e.endname = endname
-	e.ch = rn.endCh
+	e.ch = rn.endCh  // 将Network的endChannle赋值给ClientEnd.ch
 	rn.ends[endname] = e
 	rn.enabled[endname] = false
 	rn.connections[endname] = nil
@@ -282,6 +297,10 @@ func (rn *Network) MakeEnd(endname interface{}) *ClientEnd {
 }
 
 func (rn *Network) AddServer(servername interface{}, rs *Server) {
+	/*
+		将RPC Server的字符串名字到Network中
+		在Network中加入servername和RPC Server的映射
+	 */
 	rn.mu.Lock()
 	defer rn.mu.Unlock()
 
@@ -289,6 +308,9 @@ func (rn *Network) AddServer(servername interface{}, rs *Server) {
 }
 
 func (rn *Network) DeleteServer(servername interface{}) {
+	/*
+		删除Server名字和Server对象的映射
+	 */
 	rn.mu.Lock()
 	defer rn.mu.Unlock()
 
@@ -298,6 +320,9 @@ func (rn *Network) DeleteServer(servername interface{}) {
 // connect a ClientEnd to a server.
 // a ClientEnd can only be connected once in its lifetime.
 func (rn *Network) Connect(endname interface{}, servername interface{}) {
+	/*
+		通过Map映射将ClientEnd的名字和Server的名字连接起来
+	 */
 	rn.mu.Lock()
 	defer rn.mu.Unlock()
 
@@ -314,6 +339,9 @@ func (rn *Network) Enable(endname interface{}, enabled bool) {
 
 // get a server's count of incoming RPCs.
 func (rn *Network) GetCount(servername interface{}) int {
+	/*
+		通过Server的名字获取对应的Server对象
+	 */
 	rn.mu.Lock()
 	defer rn.mu.Unlock()
 
@@ -333,18 +361,28 @@ type Server struct {
 }
 
 func MakeServer() *Server {
+	/*
+		初始化一个Server对象
+	 */
 	rs := &Server{}
 	rs.services = map[string]*Service{}
 	return rs
 }
 
 func (rs *Server) AddService(svc *Service) {
+	/*
+		将RPC Service注册到Server的map列表中
+	 */
 	rs.mu.Lock()
 	defer rs.mu.Unlock()
 	rs.services[svc.name] = svc
 }
 
 func (rs *Server) dispatch(req reqMsg) replyMsg {
+	/*
+		对Service.method拆分, 并查找出Service对象
+		让Service来做dispatch
+	 */
 	rs.mu.Lock()
 
 	rs.count += 1
@@ -387,13 +425,16 @@ type Service struct {
 }
 
 func MakeService(rcvr interface{}) *Service {
+	/*
+	 	利用了反射特性创建一个RPC服务
+	  */
 	svc := &Service{}
 	svc.typ = reflect.TypeOf(rcvr)
 	svc.rcvr = reflect.ValueOf(rcvr)
 	svc.name = reflect.Indirect(svc.rcvr).Type().Name()
 	svc.methods = map[string]reflect.Method{}
 
-	for m := 0; m < svc.typ.NumMethod(); m++ {
+	for m := 0; m < svc.typ.NumMethod(); m++ { // 服务注册
 		method := svc.typ.Method(m)
 		mtype := method.Type
 		mname := method.Name
@@ -418,6 +459,11 @@ func MakeService(rcvr interface{}) *Service {
 }
 
 func (svc *Service) dispatch(methname string, req reqMsg) replyMsg {
+	/*
+		通过reflect找到method名对应的method(这是一个func)
+		对方法进行实际调用 function.Call.
+		返回replgMsg
+	 */
 	if method, ok := svc.methods[methname]; ok {
 		// prepare space into which to read the argument.
 		// the Value's type will be a pointer to req.argsType.
