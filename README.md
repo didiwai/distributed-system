@@ -11,7 +11,7 @@
 
 My solution in detail:
 
-[6.824 Lab 1: MapReduce]()
+[6.824 Lab 1: MapReduce](http://andrewliu.in/2016/04/16/6-824-Lab-1-MapReduce-2016/)
 
 
 # License
